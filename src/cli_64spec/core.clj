@@ -1,7 +1,7 @@
 (ns cli-64spec.core
   (:require [clojure.core.async
              :as async
-             :refer [>! <! >!! <!! go chan close!]]
+             :refer [>! <! >!! <!! go thread chan close!]]
             [clj-commons-exec :as exec]
             [me.raynes.fs :as fs])
   (:gen-class))
@@ -64,7 +64,7 @@
 
 (defn test-file
   [channel file-path]
-  (go (>! channel
+  (thread (>!! channel
           (str "Testing: " file-path "\n"
                (compile-file file-path)))
       (close! channel)))
@@ -78,4 +78,5 @@
 (defn -main
   [& args]
   (let [channels (map #(schedule-test %) args)]
+    (println "Running " (count channels) "tests")
     (doall (map #(println (<!! %1)) channels))))
